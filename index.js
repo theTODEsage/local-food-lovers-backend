@@ -36,12 +36,18 @@ async function run() {
       res.send(reviews);
     });
 
-    app.get('/reviews', async(req, res)=>{
+    app.get("/reviews", async (req, res) => {
       const cursor = reviewCollectoin.find();
       const result = await cursor.toArray();
 
-      res.send(result)
-    })
+      res.send(result);
+    });
+
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollectoin.insertOne(review);
+      res.send(result);
+    });
 
 
 
@@ -50,7 +56,10 @@ async function run() {
 
 
 
-    
+
+
+
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
