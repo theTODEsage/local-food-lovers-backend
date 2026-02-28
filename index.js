@@ -1,13 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = 3000;
 
 app.use(cors());
 app.use(express.json());
-
-//fPaMRwK5XIm3T4Av assignmentDB
 
 const uri =
   "mongodb+srv://assignmentDB:fPaMRwK5XIm3T4Av@cluster0.2hdxpbz.mongodb.net/?appName=Cluster0";
@@ -25,10 +23,14 @@ async function run() {
     await client.connect();
 
     const reviewDB = client.db("reviewDB");
-    const reviewCollectoin = reviewDB.collection("reviews");
+    const reviewCollection = reviewDB.collection("reviews");
+    const favoritesCollection = reviewDB.collection("favorites");
 
+    // ── REVIEW ROUTES ────────────────────────────────────────────
+
+    // GET - Top 6 rated reviews for homepage
     app.get("/reviews/top-rated", async (req, res) => {
-      const reviews = await reviewCollectoin
+      const reviews = await reviewCollection
         .find()
         .sort({ rating: -1 })
         .limit(6)
@@ -36,29 +38,107 @@ async function run() {
       res.send(reviews);
     });
 
-    app.get("/reviews", async (req, res) => {
-      const cursor = reviewCollectoin.find();
-      const result = await cursor.toArray();
-
-      res.send(result);
+    // GET - Reviews by logged in user email
+    app.get("/reviews/my-reviews", async (req, res) => {
+      const email = req.query.email;
+      const reviews = await reviewCollection
+        .find({ reviewerEmail: email })
+        .sort({ date: -1 })
+        .toArray();
+      res.send(reviews);
     });
 
+    // GET - All reviews with optional search (sorted by date descending)
+    app.get("/reviews", async (req, res) => {
+      const search = req.query.search || "";
+      const query = search
+        ? { foodName: { $regex: search, $options: "i" } }
+        : {};
+      const reviews = await reviewCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
+      res.send(reviews);
+    });
+
+    // GET - Single review by id
+    app.get("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const review = await reviewCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(review);
+    });
+
+    // POST - Add new review
     app.post("/reviews", async (req, res) => {
       const review = req.body;
-      const result = await reviewCollectoin.insertOne(review);
+      const result = await reviewCollection.insertOne(review);
       res.send(result);
     });
 
+    // PUT - Update a review
+    app.put("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedReview = req.body;
+      const result = await reviewCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            foodName: updatedReview.foodName,
+            foodImage: updatedReview.foodImage,
+            restaurantName: updatedReview.restaurantName,
+            location: updatedReview.location,
+            rating: updatedReview.rating,
+            reviewText: updatedReview.reviewText,
+          },
+        },
+      );
+      res.send(result);
+    });
 
+    // DELETE - Delete a review
+    app.delete("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await reviewCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
 
+    // ── FAVORITES ROUTES ─────────────────────────────────────────
 
+    // GET - favorites by user email
+    app.get("/favorites", async (req, res) => {
+      const email = req.query.email;
+      const favorites = await favoritesCollection
+        .find({ userEmail: email })
+        .toArray();
+      res.send(favorites);
+    });
 
+    // POST - add to favorites (prevent duplicates)
+    app.post("/favorites", async (req, res) => {
+      const favorite = req.body;
+      const existing = await favoritesCollection.findOne({
+        reviewId: favorite.reviewId,
+        userEmail: favorite.userEmail,
+      });
+      if (existing) {
+        return res.send({ alreadyExists: true });
+      }
+      const result = await favoritesCollection.insertOne(favorite);
+      res.send(result);
+    });
 
-
-
-
-
-
+    // DELETE - remove a favorite
+    app.delete("/favorites/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await favoritesCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
