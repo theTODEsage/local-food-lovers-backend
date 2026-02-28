@@ -26,9 +26,7 @@ async function run() {
     const reviewCollection = reviewDB.collection("reviews");
     const favoritesCollection = reviewDB.collection("favorites");
 
-    // ── REVIEW ROUTES ────────────────────────────────────────────
 
-    // GET - Top 6 rated reviews for homepage
     app.get("/reviews/top-rated", async (req, res) => {
       const reviews = await reviewCollection
         .find()
@@ -38,7 +36,8 @@ async function run() {
       res.send(reviews);
     });
 
-    // GET - Reviews by logged in user email
+
+
     app.get("/reviews/my-reviews", async (req, res) => {
       const email = req.query.email;
       const reviews = await reviewCollection
@@ -48,7 +47,7 @@ async function run() {
       res.send(reviews);
     });
 
-    // GET - All reviews with optional search (sorted by date descending)
+ 
     app.get("/reviews", async (req, res) => {
       const search = req.query.search || "";
       const query = search
@@ -61,7 +60,7 @@ async function run() {
       res.send(reviews);
     });
 
-    // GET - Single review by id
+
     app.get("/reviews/:id", async (req, res) => {
       const id = req.params.id;
       const review = await reviewCollection.findOne({
@@ -70,14 +69,14 @@ async function run() {
       res.send(review);
     });
 
-    // POST - Add new review
+
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result);
     });
 
-    // PUT - Update a review
+
     app.put("/reviews/:id", async (req, res) => {
       const id = req.params.id;
       const updatedReview = req.body;
@@ -97,7 +96,7 @@ async function run() {
       res.send(result);
     });
 
-    // DELETE - Delete a review
+
     app.delete("/reviews/:id", async (req, res) => {
       const id = req.params.id;
       const result = await reviewCollection.deleteOne({
@@ -106,9 +105,7 @@ async function run() {
       res.send(result);
     });
 
-    // ── FAVORITES ROUTES ─────────────────────────────────────────
 
-    // GET - favorites by user email
     app.get("/favorites", async (req, res) => {
       const email = req.query.email;
       const favorites = await favoritesCollection
@@ -117,7 +114,7 @@ async function run() {
       res.send(favorites);
     });
 
-    // POST - add to favorites (prevent duplicates)
+
     app.post("/favorites", async (req, res) => {
       const favorite = req.body;
       const existing = await favoritesCollection.findOne({
@@ -131,7 +128,6 @@ async function run() {
       res.send(result);
     });
 
-    // DELETE - remove a favorite
     app.delete("/favorites/:id", async (req, res) => {
       const id = req.params.id;
       const result = await favoritesCollection.deleteOne({
