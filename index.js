@@ -7,8 +7,12 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
+//VUI26WR0T6MYXIRZ assignmentDB2
+
 const uri =
-  "mongodb+srv://assignmentDB:fPaMRwK5XIm3T4Av@cluster0.2hdxpbz.mongodb.net/?appName=Cluster0";
+  "mongodb+srv://assignmentDB2:VUI26WR0T6MYXIRZ@cluster0.2hdxpbz.mongodb.net/reviewDB?appName=Cluster0";
+// const uri =
+//   "mongodb+srv://assignmentDB:fPaMRwK5XIm3T4Av@cluster0.2hdxpbz.mongodb.net/?appName=Cluster0";
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -20,7 +24,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const reviewDB = client.db("reviewDB");
     const reviewCollection = reviewDB.collection("reviews");
@@ -136,7 +140,7 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
     );
